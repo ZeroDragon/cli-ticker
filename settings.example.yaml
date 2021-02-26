@@ -1,0 +1,7 @@
+fiat: usd
+coins:
+  - name: Bitcoin
+    coinId: bitcoin
+    qty: 1
+    fiat: 45000
+    showChart: true
