@@ -35,7 +35,7 @@ showChart: true or false to show the last 24hrs of data for this coin
 just type `npm start`
 
 # Screenshot
+![demo screenshot](./demo.png)
 
-
-Any questions, t.me/zerodragon
-Powered by coingecko
+Any questions, [t.me/zerodragon](https://t.me/zerodragon)
+Powered by [Coingecko](https://www.coingecko.com)
