@@ -31,5 +31,11 @@ qty: How many of this coins you have on your portfolio
 fiat: How much fiat you invest so far on this coin
 showChart: true or false to show the last 24hrs of data for this coin
 
+# Start
+just type `npm start`
+
+# Screenshot
+
+
 Any questions, t.me/zerodragon
 Powered by coingecko
