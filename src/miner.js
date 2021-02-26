@@ -34,7 +34,6 @@ const charts = async () => {
   })
   const metas = await Promise.all(metaP)
   const charts = await Promise.all(chartsP)
-  console.log('============================================')
   console.clear()
   const portfolio = []
   const table = charts
@@ -84,7 +83,7 @@ const charts = async () => {
   const displayDate = `${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`.black
   const powered = 'Powered by Coingecko.com'.black
   const fullPortfolio = `$${portValue.toLocaleString()}`.green
-  process.stdout.write(` Total Portfolio: ${fullPortfolio}       ${displayDate}      ${powered}`)
+  process.stdout.write(` Total Portfolio: ${fullPortfolio}      ${displayDate}      ${powered}`)
 }
 
 module.exports = {
