@@ -1,6 +1,6 @@
 const CoinGecko = require('coingecko-api')
 const asciichart = require('asciichart')
-const { printTable } = require('console-table-printer')
+const { Table } = require('console-table-printer')
 const { loadSettings } = require('./settings')
 require('consolecolors')
 
@@ -25,28 +25,54 @@ const getCoinMeta = async (coin, fiat) => {
   return { price, change }
 }
 
+const parseCoins = (coins, joinCoins) => {
+  if (!joinCoins) return coins
+  const dic = {}
+  coins.forEach(coin => {
+    if (!dic[coin.coinId]) {
+      dic[coin.coinId] = coin
+      return
+    }
+    const dCoin = dic[coin.coinId]
+    dCoin.qty = (dCoin.qty || 0) + coin.qty
+    dCoin.fiat = (dCoin.fiat || 0) + coin.fiat
+  })
+  return Object.values(dic)
+}
+
 const charts = async () => {
-  const { coins, fiat } = await loadSettings()
-  const chartsP = coins.map(async coin => await getCoinChart(coin.coinId, fiat))
-  const metaP = coins.map(async coin => {
+  const {
+    coins: pCoins, fiat, hideColumns: hCol, joinCoins = false
+  } = await loadSettings()
+  const coins = parseCoins(pCoins, joinCoins)
+  const hideColumns = hCol || []
+  const chartsP = coins.map(async (coin, id) => {
+    const chartData = await getCoinChart(coin.coinId, fiat)
+    return { id, chartData }
+  })
+  const metaP = coins.map(async (coin, id) => {
     const meta = await getCoinMeta(coin.coinId, fiat)
-    return { ...coin, ...meta }
+    return { ...coin, ...meta, id }
   })
   const metas = await Promise.all(metaP)
   const charts = await Promise.all(chartsP)
   console.clear()
   const portfolio = []
+  const cutOff = {
+    0: 20,
+    1: 29,
+    2: 30
+  }[hideColumns.length]
   const table = charts
-    .map(({ chart, coin }) => {
-      const meta = JSON.parse(JSON.stringify(metas.find(c => c.coinId === coin)))
-      delete meta.coinId
+    .map(({ id, chartData: { chart, coin } }) => {
+      const meta = JSON.parse(JSON.stringify(metas.find(c => c.id === id)))
       const changeColor = { true: 'green', false: 'red' }[meta.change > 0]
       const hours = {}
       const qty = (meta.qty || 0)
       chart.prices
         .forEach(([time, price]) => {
           const t = new Date(time)
-          const half = Math.floor(t.getMinutes() / 30) * 30
+          const half = Math.floor(t.getMinutes() / cutOff) * cutOff
           hours[`${t.getDate()}${t.getHours()}${half}`] = price
         })
       const displayChart = asciichart.plot(
@@ -67,23 +93,31 @@ const charts = async () => {
         console.log(displayChart)
         console.log('')
       }
-      return {
+      const tableData = {
         Trading: tradingName,
         Value: `$${meta.price.toLocaleString()}`.yellow,
         Qty: `${qty.toLocaleString()}`.yellow,
         Diff: `${change}%`[changeColor],
         Holding: `$${portValue.toLocaleString()}`.blue,
+        Investment: `$${(meta.fiat || 0).toLocaleString()}`.blue,
         Delta: `$${diff.toLocaleString()}`[fiatColor]
       }
+      hideColumns.forEach(hCol => {
+        delete tableData[hCol]
+      })
+      return tableData
     })
-  printTable(table)
+  const tbl = new Table()
+  tbl.addRows(table)
+  tbl.printTable()
+  const tblWidth = tbl.table.columns
+    .map(({ max_ln: size }) => size + 3)
+    .reduce((acum, prev) => acum + prev)
   const portValue = portfolio.reduce((acum, curr) => acum + parseFloat(curr), 0)
-  const d = new Date()
-  const z = i => `00${i}`.slice(-2)
-  const displayDate = `${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`.black
-  const powered = 'Powered by Coingecko.com'.black
   const fullPortfolio = `$${portValue.toLocaleString()}`.green
-  process.stdout.write(` Total Portfolio: ${fullPortfolio}      ${displayDate}      ${powered}`)
+  const leftText = `Total Portfolio: ${fullPortfolio}`
+  const powered = 't.me/ZeroDragon'.padStart(tblWidth + 11 - leftText.length).magenta
+  process.stdout.write(`${leftText}${powered}`)
 }
 
 module.exports = {
