@@ -1,7 +1,11 @@
-fiat: usd
+fiat: usd #               required. The fiat to represent values
+hideColumns: #            optional. Set columns to exclude from table
+  - Value #               must be one of the presented columns (case sensitive)
+joinCoins: true #         optional. Set to true to join same coins into single value
+
 coins:
   - name: Bitcoin
     coinId: bitcoin
-    qty: 1
-    fiat: 45000
-    showChart: true
+    qty: 1 #              optional. The quantity of coin bougth
+    fiat: 45000 #         optional. The amount of money spend on that
+    showChart: true #     optional. Set to true to display current chart
